@@ -8,7 +8,7 @@
 
 /**
  * @ngdoc overview
- * @name angulartics.google.analytics
+ * @name angulartics.google.analytics.cordova
  * Enables analytics support for Google Analytics (http://google.com/analytics)
  */
 angular.module('angulartics.google.analytics.cordova', ['angulartics'])
@@ -43,9 +43,51 @@ angular.module('angulartics.google.analytics.cordova', ['angulartics'])
       }
     }
 
+    // There are two popular cordova Google Analytics plugins
+    // - gaPlugin : https://github.com/phonegap-build/GAPlugin
+    function isGaPlugin() {
+      var plugins = window.plugins;
+      if (plugins) {
+        if (window.plugins.gaPlugin) {
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    }
+
+    // There are two popular cordova Google Analytics plugins
+    // - UniversalAnalyticsPlugin : https://github.com/danwilson/google-analytics-plugin
+    function isUaPlugin() {
+      var plugins = window.plugins;
+      if (plugins) {
+        if (window.plugins.UniversalAnalyticsPlugin) {
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    }
+
+    function findAnalytics() {
+
+      if (isUaPlugin()) {
+        return window.plugins.gaPlugin;
+      }
+      if (isGaPlugin()) {
+        return window.plugins.UniversalAnalyticsPlugin;
+      }
+
+      return null;
+    }
+
     this.init = function () {
       return deferred.promise.then(function () {
-        var analytics = window.plugins && window.plugins.gaPlugin;
+        var analytics = findAnalytics();
         if (analytics) {
           analytics.init(function onInit() {
             ready(analytics, success, failure);
@@ -75,11 +117,29 @@ angular.module('angulartics.google.analytics.cordova', ['angulartics'])
 .config(['$analyticsProvider', 'googleAnalyticsCordovaProvider', function ($analyticsProvider, googleAnalyticsCordovaProvider) {
   googleAnalyticsCordovaProvider.ready(function (analytics, success, failure) {
     $analyticsProvider.registerPageTrack(function (path) {
-      analytics.trackPage(success, failure, path);
+
+      // GAPlugin.prototype.trackPage = function(success, fail, pageURL) {
+      if (isGaPlugin()) {
+        analytics.trackPage(success, failure, path);
+      }
+
+      // UniversalAnalyticsPlugin.prototype.trackView = function(screen, success, error) {
+      if (isUaPlugin()) {
+        analytics.trackView(path, success, failure);
+      }
     });
 
     $analyticsProvider.registerEventTrack(function (action, properties) {
-      analytics.trackEvent(success, failure, properties.category, action, properties.label, properties.value);
+
+      //  GAPlugin.prototype.trackEvent = function(success, fail, category, eventAction, eventLabel, eventValue) {
+      if (isGaPlugin()) {
+        analytics.trackEvent(success, failure, properties.category, action, properties.label, properties.value);
+      }
+
+      // UniversalAnalyticsPlugin.prototype.trackEvent = function(category, action, label, value, success, error) {
+      if (isUaPlugin()) {
+        analytics.trackEvent(properties.category, action, properties.label, properties.value,success, failure);
+      }
     });
   });
 }])
