@@ -76,9 +76,11 @@ angular.module('angulartics.google.analytics.cordova', ['angulartics'])
     function findAnalytics() {
 
       if (isUaPlugin()) {
+        console.log('found gaPlugin');
         return window.plugins.gaPlugin;
       }
       if (isGaPlugin()) {
+        console.log('found uaPlugin');
         return window.plugins.UniversalAnalyticsPlugin;
       }
 
@@ -118,6 +120,7 @@ angular.module('angulartics.google.analytics.cordova', ['angulartics'])
   googleAnalyticsCordovaProvider.ready(function (analytics, success, failure) {
     $analyticsProvider.registerPageTrack(function (path) {
 
+      console.log(path);
       // GAPlugin.prototype.trackPage = function(success, fail, pageURL) {
       if (isGaPlugin()) {
         analytics.trackPage(success, failure, path);
@@ -131,6 +134,7 @@ angular.module('angulartics.google.analytics.cordova', ['angulartics'])
 
     $analyticsProvider.registerEventTrack(function (action, properties) {
 
+      console.log(properties);
       //  GAPlugin.prototype.trackEvent = function(success, fail, category, eventAction, eventLabel, eventValue) {
       if (isGaPlugin()) {
         analytics.trackEvent(success, failure, properties.category, action, properties.label, properties.value);
